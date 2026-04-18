@@ -51,6 +51,14 @@ REMOTE_HOST=my-openclaw-host ./scripts/verify-remote.sh
 
 These scripts are opinionated admin helpers. They update the remote OpenClaw config, ensure the skill and plugin paths exist, and restart the remote gateway.
 
+They also have real operational blast radius:
+
+- `rsync --delete` is used against the managed extension and skill directories
+- `~/.openclaw/openclaw.json` is rewritten after a timestamped backup is created
+- the remote OpenClaw gateway is restarted as part of install
+
+Use them only for paths and hosts that TotalReClaw is meant to own.
+
 Expected result after remote verify:
 
 - the plugin is present under `~/.openclaw/extensions/totalreclaw`
@@ -156,6 +164,8 @@ Memory is never blindly auto-accepted. The automatic path only creates context o
 
 TotalReClaw is configured through the OpenClaw plugin config. The plugin fails open on hook problems and keeps recall bounded by time and token budget.
 
+`~` is expanded in configured paths before TotalReClaw opens storage.
+
 Example:
 
 ```json
@@ -223,7 +233,7 @@ Important behavior:
 TotalReClaw currently assumes:
 
 - Node `22+` because it uses `node:sqlite`
-- current validation target is OpenClaw `2026.4.15+`
+- current manual validation target is OpenClaw `2026.4.15+`
 - OpenClaw can load TypeScript extensions directly from `index.ts`
 - OpenClaw honors plugin-declared bundled skills from `openclaw.plugin.json`
 

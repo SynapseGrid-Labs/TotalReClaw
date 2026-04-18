@@ -1,5 +1,12 @@
 import type { CommandExecution } from "./src/types.ts";
-import { buildRecallContext, createResolvedConfig, finalizeSession, recordAgentTurn, runAutoCheck } from "./src/engine.ts";
+import {
+  buildRecallContext,
+  createResolvedConfig,
+  finalizeSession,
+  finalizeSessionFromEvent,
+  recordAgentTurn,
+  runAutoCheck,
+} from "./src/engine.ts";
 import { executeTotalReClawCommand } from "./src/command.ts";
 
 type ToolResult = {
@@ -125,12 +132,12 @@ const plugin = {
     });
 
     for (const hookName of ["command:new", "command:reset"]) {
-      safeRegister(hookName, async () => {
+      safeRegister(hookName, async (event, ctx) => {
         if (!resolved.enabled || !resolved.enableAutoCapture) {
           return;
         }
         try {
-          await finalizeSession(undefined, resolved);
+          await finalizeSessionFromEvent(event, ctx, resolved);
         } catch {
           return;
         }
@@ -145,4 +152,11 @@ const plugin = {
 
 export default plugin;
 export { executeTotalReClawCommand } from "./src/command.ts";
-export { createResolvedConfig, runAutoCheck, checkTask, recordAgentTurn, finalizeSession } from "./src/engine.ts";
+export {
+  createResolvedConfig,
+  runAutoCheck,
+  checkTask,
+  recordAgentTurn,
+  finalizeSession,
+  finalizeSessionFromEvent,
+} from "./src/engine.ts";

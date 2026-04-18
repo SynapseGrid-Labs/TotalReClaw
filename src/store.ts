@@ -1,7 +1,8 @@
 import { createHash, randomUUID } from "node:crypto";
 import { promises as fs } from "node:fs";
+import { createRequire } from "node:module";
 import path from "node:path";
-import { DatabaseSync } from "node:sqlite";
+import type { DatabaseSync } from "node:sqlite";
 
 import type {
   DraftRecord,
@@ -13,6 +14,29 @@ import type {
 } from "./types.ts";
 
 const initializationCache = new Map<string, Promise<void>>();
+const require = createRequire(import.meta.url);
+type DatabaseSyncCtor = new (location: string) => DatabaseSync;
+let databaseSyncCtor: DatabaseSyncCtor | null = null;
+
+function getDatabaseSyncCtor(): DatabaseSyncCtor {
+  if (databaseSyncCtor) {
+    return databaseSyncCtor;
+  }
+
+  try {
+    const loaded = require("node:sqlite") as { DatabaseSync?: DatabaseSyncCtor };
+    if (typeof loaded.DatabaseSync !== "function") {
+      throw new Error("DatabaseSync export was not available");
+    }
+    databaseSyncCtor = loaded.DatabaseSync;
+    return databaseSyncCtor;
+  } catch (error) {
+    const reason = error instanceof Error ? error.message : String(error);
+    throw new Error(
+      `TotalReClaw requires the Node.js core node:sqlite API. Upgrade the host runtime to a Node 22 build with node:sqlite support before enabling durable storage (${reason}).`,
+    );
+  }
+}
 
 function encodeJson(value: unknown): string {
   return JSON.stringify(value ?? []);
@@ -47,6 +71,7 @@ function initKey(config: ResolvedConfig): string {
 }
 
 function openDatabase(dbPath: string): DatabaseSync {
+  const DatabaseSync = getDatabaseSyncCtor();
   const db = new DatabaseSync(dbPath);
   db.exec("PRAGMA journal_mode = WAL;");
   db.exec("PRAGMA synchronous = NORMAL;");

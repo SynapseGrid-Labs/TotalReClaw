@@ -24,4 +24,8 @@ Project maintainers may remove, edit, or reject comments, commits, code, wiki ed
 
 ## Reporting
 
-For conduct concerns related to this repository, contact the maintainer through GitHub or the repository security contact path when private handling is needed.
+For conduct concerns related to this repository, contact the maintainer privately through the owner profile at `https://github.com/trentdoney`.
+
+Do not use public issues for conduct reports.
+
+Do not use the repository security advisory channel unless the report also includes a security-sensitive disclosure.

@@ -1385,6 +1385,15 @@ export async function finalizeSession(
   };
 }
 
+export async function finalizeSessionFromEvent(
+  rawEvent: Record<string, unknown>,
+  rawCtx: Record<string, unknown> | undefined,
+  config: ResolvedConfig,
+): Promise<CommandExecution> {
+  const session = deriveSessionRef(rawEvent, rawCtx);
+  return finalizeSession(session.session_key, config);
+}
+
 export async function listSessions(query: string | undefined, config: ResolvedConfig): Promise<CommandExecution> {
   await ensureStoreReady(config);
   const [accepted, drafts, active] = await Promise.all([
