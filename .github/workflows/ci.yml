@@ -1,0 +1,37 @@
+name: ci
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        node:
+          - 22
+          - 24
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node }}
+          cache: npm
+      - run: npm ci
+      - run: npm run verify
+      - name: Job summary
+        if: always()
+        run: |
+          {
+            echo "## Verification"
+            echo ""
+            echo "- Node: ${{ matrix.node }}"
+            echo "- Command: npm run verify"
+            echo "- Includes packaged-artifact check for required runtime assets"
+          } >> "$GITHUB_STEP_SUMMARY"
