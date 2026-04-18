@@ -1,0 +1,125 @@
+{
+  "id": "totalreclaw",
+  "name": "TotalReClaw",
+  "description": "OpenClaw-native operational memory that recalls prior records and session context before work repeats itself.",
+  "version": "0.1.0",
+  "author": "Trent Doney",
+  "license": "MIT",
+  "homepage": "https://github.com/trentdoney/TotalReClaw",
+  "skills": [
+    "skills/TotalReClaw"
+  ],
+  "uiHints": {
+    "enableAutoRecall": {
+      "label": "Enable Auto Recall",
+      "help": "Run a pre-prompt TotalReClaw lookup on operational prompts."
+    },
+    "enableAutoCapture": {
+      "label": "Enable Auto Capture",
+      "help": "Accumulate session context at agent end and create reviewable session drafts on close/reset."
+    },
+    "dbPath": {
+      "label": "SQLite Database Path",
+      "help": "SQLite file used for durable memory records and accepted session summaries."
+    },
+    "storePath": {
+      "label": "Legacy Lesson Store Path",
+      "help": "Deprecated JSONL import path used only for one-time migration of older lesson stores."
+    },
+    "draftPath": {
+      "label": "Draft Path",
+      "help": "Directory used for reviewable capture and session-summary drafts before records are accepted."
+    },
+    "sessionStatePath": {
+      "label": "Session State Path",
+      "help": "Directory used for in-flight session accumulators before they are finalized into drafts."
+    },
+    "hookTimeoutMs": {
+      "label": "Hook Timeout",
+      "help": "Maximum time the automatic recall hook is allowed to run before failing open."
+    },
+    "priorFixThreshold": {
+      "label": "Prior Fix Threshold",
+      "help": "Confidence required before a failure-fix record is surfaced as a prior fix."
+    },
+    "conflictWindow": {
+      "label": "Conflict Window",
+      "help": "Score distance at which two records are treated as conflicting."
+    },
+    "maxRecordsInjected": {
+      "label": "Max Injected Records",
+      "help": "Maximum number of matched records or session summaries injected into the prompt hook."
+    },
+    "maxTokensInjected": {
+      "label": "Max Injected Tokens",
+      "help": "Approximate token budget for the injected recall context."
+    },
+    "summaryModel": {
+      "label": "Summary Model",
+      "help": "Summary generation mode for session drafts. `deterministic` keeps all generation local."
+    }
+  },
+  "configSchema": {
+    "type": "object",
+    "additionalProperties": false,
+    "properties": {
+      "enabled": {
+        "type": "boolean"
+      },
+      "enableAutoRecall": {
+        "type": "boolean"
+      },
+      "enableAutoCheck": {
+        "type": "boolean"
+      },
+      "enableAutoCapture": {
+        "type": "boolean"
+      },
+      "dbPath": {
+        "type": "string"
+      },
+      "storePath": {
+        "type": "string"
+      },
+      "draftPath": {
+        "type": "string"
+      },
+      "sessionStatePath": {
+        "type": "string"
+      },
+      "hookTimeoutMs": {
+        "type": "integer",
+        "minimum": 50,
+        "maximum": 1500
+      },
+      "priorFixThreshold": {
+        "type": "number",
+        "minimum": 0,
+        "maximum": 1
+      },
+      "noMatchThreshold": {
+        "type": "number",
+        "minimum": 0,
+        "maximum": 1
+      },
+      "conflictWindow": {
+        "type": "number",
+        "minimum": 0,
+        "maximum": 1
+      },
+      "maxRecordsInjected": {
+        "type": "integer",
+        "minimum": 1,
+        "maximum": 6
+      },
+      "maxTokensInjected": {
+        "type": "integer",
+        "minimum": 100,
+        "maximum": 1200
+      },
+      "summaryModel": {
+        "type": "string"
+      }
+    }
+  }
+}

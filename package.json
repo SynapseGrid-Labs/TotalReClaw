@@ -1,0 +1,58 @@
+{
+  "name": "totalreclaw",
+  "version": "0.1.0",
+  "description": "OpenClaw operational memory that recalls prior records and session context before agents repeat work.",
+  "type": "module",
+  "main": "index.ts",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/trentdoney/TotalReClaw.git"
+  },
+  "bugs": {
+    "url": "https://github.com/trentdoney/TotalReClaw/issues"
+  },
+  "homepage": "https://github.com/trentdoney/TotalReClaw#readme",
+  "license": "MIT",
+  "author": "Trent Doney",
+  "keywords": [
+    "openclaw",
+    "openclaw-plugin",
+    "openclaw-skill",
+    "memory",
+    "debugging",
+    "session-memory",
+    "agent"
+  ],
+  "files": [
+    "index.ts",
+    "src/**/*.ts",
+    "skills/**",
+    "examples/**",
+    "README.md",
+    "LICENSE",
+    "SECURITY.md",
+    "openclaw.plugin.json"
+  ],
+  "scripts": {
+    "pack:check": "node ./scripts/check-pack.js",
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit",
+    "verify": "npm run typecheck && npm run test && npm run pack:check"
+  },
+  "peerDependencies": {
+    "openclaw": ">=2026.4.15"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "typescript": "^5.9.3",
+    "vitest": "^3.2.4"
+  },
+  "engines": {
+    "node": ">=22"
+  },
+  "openclaw": {
+    "extensions": [
+      "./index.ts"
+    ]
+  }
+}
