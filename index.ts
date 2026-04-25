@@ -5,6 +5,7 @@ import {
   finalizeSession,
   finalizeSessionFromEvent,
   recordAgentTurn,
+  recordAgentTurnSync,
   runAutoCheck,
 } from "./src/engine.ts";
 import { executeTotalReClawCommand } from "./src/command.ts";
@@ -14,10 +15,20 @@ type ToolResult = {
   details?: Record<string, unknown>;
 };
 
+type HookResult = { prependContext?: string } | void;
+type HookOptions = { priority?: number };
+
 type HookHandler = (
   event: Record<string, unknown>,
   ctx: Record<string, unknown>,
-) => Promise<{ prependContext?: string } | void>;
+) => HookResult | Promise<HookResult>;
+
+type SyncHookHandler = (
+  event: Record<string, unknown>,
+  ctx: Record<string, unknown>,
+) => HookResult;
+
+const CAPTURE_HOOK_PRIORITY = -1000;
 
 function asTextResult(result: CommandExecution): ToolResult {
   return {
@@ -55,7 +66,7 @@ const plugin = {
     logger: { info: (message: string) => void; warn: (message: string) => void; error: (message: string) => void };
     resolvePath: (input: string) => string;
     registerTool: (factory: (ctx: Record<string, unknown>) => unknown) => void;
-    on: (hookName: string, handler: HookHandler) => void;
+    on: (hookName: string, handler: HookHandler, opts?: HookOptions) => void;
   }) {
     const pluginRoot = api.resolvePath(".");
     const resolved = createResolvedConfig(api.pluginConfig, pluginRoot);
@@ -89,18 +100,45 @@ const plugin = {
       },
     }));
 
-    const safeRegister = (hookName: string, handler: HookHandler) => {
+    const safeRegister = (hookName: string, handler: HookHandler, opts?: HookOptions) => {
       try {
-        api.on(hookName, async (event, ctx) => {
-          try {
-            return await handler(event, ctx);
-          } catch (error) {
-            api.logger.warn(
-              `[totalreclaw] ${hookName} failed open: ${error instanceof Error ? error.message : String(error)}`,
-            );
-            return;
-          }
-        });
+        api.on(
+          hookName,
+          async (event, ctx) => {
+            try {
+              return await handler(event, ctx);
+            } catch (error) {
+              api.logger.warn(
+                `[totalreclaw] ${hookName} failed open: ${error instanceof Error ? error.message : String(error)}`,
+              );
+              return;
+            }
+          },
+          opts,
+        );
+      } catch (error) {
+        api.logger.warn(
+          `[totalreclaw] hook registration skipped for ${hookName}: ${error instanceof Error ? error.message : String(error)}`,
+        );
+      }
+    };
+
+    const safeRegisterSync = (hookName: string, handler: SyncHookHandler, opts?: HookOptions) => {
+      try {
+        api.on(
+          hookName,
+          (event, ctx) => {
+            try {
+              return handler(event, ctx);
+            } catch (error) {
+              api.logger.warn(
+                `[totalreclaw] ${hookName} failed open: ${error instanceof Error ? error.message : String(error)}`,
+              );
+              return;
+            }
+          },
+          opts,
+        );
       } catch (error) {
         api.logger.warn(
           `[totalreclaw] hook registration skipped for ${hookName}: ${error instanceof Error ? error.message : String(error)}`,
@@ -124,25 +162,24 @@ const plugin = {
       return { prependContext };
     });
 
-    safeRegister("agent_end", async (event, ctx) => {
+    safeRegisterSync(
+      "before_message_write",
+      (event, ctx) => {
+        if (!resolved.enabled || !resolved.enableAutoCapture) {
+          return;
+        }
+        recordAgentTurnSync(event, ctx, resolved);
+      },
+      { priority: CAPTURE_HOOK_PRIORITY },
+    );
+
+    safeRegister("before_reset", async (event, ctx) => {
       if (!resolved.enabled || !resolved.enableAutoCapture) {
         return;
       }
       await recordAgentTurn(event, ctx, resolved);
+      await finalizeSessionFromEvent(event, ctx, resolved);
     });
-
-    for (const hookName of ["command:new", "command:reset"]) {
-      safeRegister(hookName, async (event, ctx) => {
-        if (!resolved.enabled || !resolved.enableAutoCapture) {
-          return;
-        }
-        try {
-          await finalizeSessionFromEvent(event, ctx, resolved);
-        } catch {
-          return;
-        }
-      });
-    }
 
     api.logger.info(
       `[totalreclaw] Plugin loaded (enabled=${resolved.enabled}, autoRecall=${resolved.enableAutoRecall}, db=${resolved.dbPath})`,
@@ -158,6 +195,7 @@ export {
   checkTask,
   importOpenClawHistory,
   recordAgentTurn,
+  recordAgentTurnSync,
   finalizeSession,
   finalizeSessionFromEvent,
 } from "./src/engine.ts";

@@ -2,7 +2,7 @@
   "id": "totalreclaw",
   "name": "TotalReClaw",
   "description": "OpenClaw-native operational memory that recalls prior records and session context before work repeats itself.",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "author": "Trent Doney",
   "license": "MIT",
   "homepage": "https://github.com/trentdoney/TotalReClaw",
@@ -16,7 +16,7 @@
     },
     "enableAutoCapture": {
       "label": "Enable Auto Capture",
-      "help": "Accumulate session context at agent end and create reviewable session drafts on close/reset."
+      "help": "Accumulate session context as messages are written and create reviewable session drafts on close/reset."
     },
     "dbPath": {
       "label": "SQLite Database Path",

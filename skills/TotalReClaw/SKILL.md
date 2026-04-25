@@ -21,11 +21,12 @@ Use `/totalreclaw` when you want to recall prior OpenClaw operational context, c
 /totalreclaw summary --latest|--session <id>
 /totalreclaw timeline --session <id>|"<query>"
 /totalreclaw session close [--current|--session <id>]
+/totalreclaw session import [--db <path>] [--limit <n>] [--conversation <id>|--session <id>] [--accept]
 /totalreclaw capture --file <path>
 /totalreclaw capture --stdin "<summary>"
 /totalreclaw capture --accept <draft-id>
 /totalreclaw explain "<query>"
-/totalreclaw resolve "<query>" [--action keep-newer|keep-older|merge|defer]
+/totalreclaw resolve "<query>" [--action keep-newer|keep-older|merge|defer] [--left <record-id> --right <record-id>]
 /totalreclaw demo
 ```
 
@@ -33,6 +34,7 @@ Use `/totalreclaw` when you want to recall prior OpenClaw operational context, c
 
 - [Check](Workflows/Check.md)
 - [Capture](Workflows/Capture.md)
+- [Session Import](Workflows/SessionImport.md)
 - [Explain](Workflows/Explain.md)
 - [Resolve Conflict](Workflows/ResolveConflict.md)
 - [Demo](Workflows/Demo.md)

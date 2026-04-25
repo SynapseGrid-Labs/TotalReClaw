@@ -12,8 +12,8 @@ Describe the problem in one or two sentences.
 
 ## Environment
 
-- OpenClaw version:
-- Node version:
+- OpenClaw version (must be `>=2026.4.24`):
+- Node version (must be `>=22.14.0`; paste `node --version`):
 - Host OS:
 - TotalReClaw version or commit:
 
@@ -33,7 +33,7 @@ What happened instead?
 
 ## Relevant output
 
-Paste command output, logs, or screenshots if they help.
+Paste redacted command output, logs, or screenshots if they help. Do not include secrets, tokens, private keys, cookies, `.env` values, credential-bearing URLs, or private host details.
 
 ## Notes
 

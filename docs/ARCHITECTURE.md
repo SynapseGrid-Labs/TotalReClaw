@@ -15,10 +15,11 @@ TotalReClaw is a local operational-memory layer for OpenClaw. It is designed to 
 
 `index.ts` wires TotalReClaw into OpenClaw as a plugin and resolves runtime configuration.
 
-Two hooks matter most:
+Three hooks matter most:
 
 - `before_prompt_build`: attempts a bounded recall pass for operational prompts
-- `agent_end`: accumulates session context for a later explicit summary draft
+- `before_message_write`: accumulates session context for a later explicit summary draft
+- `before_reset`: finalizes accumulated session context into a review draft before reset
 
 ### Engine
 
@@ -69,9 +70,10 @@ Legacy compatibility:
 
 ### Session path
 
-1. `agent_end` appends session context into the active accumulator
+1. `before_message_write` appends session context into the active accumulator
 2. `/totalreclaw session close` turns that accumulator into a review draft
-3. Operator reviews and accepts the draft if it should become durable memory
+3. `before_reset` also finalizes the matching accumulator before reset
+4. Operator reviews and accepts the draft if it should become durable memory
 
 ## Safety model
 

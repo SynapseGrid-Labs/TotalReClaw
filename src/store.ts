@@ -1,5 +1,5 @@
 import { createHash, randomUUID } from "node:crypto";
-import { promises as fs } from "node:fs";
+import { mkdirSync, readFileSync, renameSync, writeFileSync, promises as fs } from "node:fs";
 import { createRequire } from "node:module";
 import path from "node:path";
 import type { DatabaseSync } from "node:sqlite";
@@ -60,6 +60,10 @@ function dedupe(values: string[]): string[] {
 
 async function ensureDir(dirPath: string): Promise<void> {
   await fs.mkdir(dirPath, { recursive: true });
+}
+
+function ensureDirSync(dirPath: string): void {
+  mkdirSync(dirPath, { recursive: true });
 }
 
 async function ensureParent(filePath: string): Promise<void> {
@@ -545,6 +549,15 @@ export async function saveSessionAccumulator(root: string, accumulator: SessionA
   return filePath;
 }
 
+export function saveSessionAccumulatorSync(root: string, accumulator: SessionAccumulator): string {
+  ensureDirSync(root);
+  const filePath = sessionStateFilePath(root, accumulator.session_key);
+  const tempPath = `${filePath}.tmp`;
+  writeFileSync(tempPath, `${JSON.stringify(accumulator, null, 2)}\n`, "utf8");
+  renameSync(tempPath, filePath);
+  return filePath;
+}
+
 export async function loadSessionAccumulator(
   root: string,
   sessionKey: string,
@@ -552,6 +565,20 @@ export async function loadSessionAccumulator(
   const filePath = sessionStateFilePath(root, sessionKey);
   try {
     const raw = await fs.readFile(filePath, "utf8");
+    return JSON.parse(raw) as SessionAccumulator;
+  } catch (error) {
+    const nodeError = error as NodeJS.ErrnoException;
+    if (nodeError?.code === "ENOENT") {
+      return null;
+    }
+    throw error;
+  }
+}
+
+export function loadSessionAccumulatorSync(root: string, sessionKey: string): SessionAccumulator | null {
+  const filePath = sessionStateFilePath(root, sessionKey);
+  try {
+    const raw = readFileSync(filePath, "utf8");
     return JSON.parse(raw) as SessionAccumulator;
   } catch (error) {
     const nodeError = error as NodeJS.ErrnoException;

@@ -19,10 +19,12 @@ import {
   loadLegacyLessons,
   loadMemoryRecords,
   loadSessionAccumulator,
+  loadSessionAccumulatorSync,
   loadSessionSummaries,
   saveAcceptedSessionBundle,
   saveDraft,
   saveSessionAccumulator,
+  saveSessionAccumulatorSync,
   updateDraft,
   upsertMemoryRecords,
 } from "./store.ts";
@@ -1114,6 +1116,10 @@ function getStringPath(source: Record<string, unknown>, pathExpression: string):
 
 function deriveSessionRef(event: Record<string, unknown>, ctx?: Record<string, unknown>): SessionRef {
   const source = { ...ctx, ...event };
+  const explicitSessionKey =
+    getStringPath(source, "session.key") ??
+    getStringPath(source, "sessionKey") ??
+    getStringPath(source, "metadata.sessionKey");
   const agentId =
     getStringPath(source, "agent.id") ??
     getStringPath(source, "agentId") ??
@@ -1123,6 +1129,7 @@ function deriveSessionRef(event: Record<string, unknown>, ctx?: Record<string, u
     getStringPath(source, "session.id") ??
     getStringPath(source, "sessionId") ??
     getStringPath(source, "metadata.sessionId") ??
+    explicitSessionKey ??
     createSessionId(`${agentId}|${Date.now()}`);
   const channelId =
     getStringPath(source, "channel.id") ??
@@ -1141,9 +1148,10 @@ function deriveSessionRef(event: Record<string, unknown>, ctx?: Record<string, u
       : "openclaw";
 
   const session_key =
-    sourceSurface === "telegram"
+    explicitSessionKey ??
+    (sourceSurface === "telegram"
       ? `telegram:${agentId}:${channelId || "chat"}:${threadId}:${sessionId}`
-      : `openclaw:${agentId}:${sessionId}`;
+      : `openclaw:${agentId}:${sessionId}`);
 
   return {
     session_id: sessionId,
@@ -1560,6 +1568,46 @@ export async function recordAgentTurn(
   appendSignals(accumulator, texts);
 
   await saveSessionAccumulator(config.sessionStatePath, accumulator);
+  return accumulator;
+}
+
+export function recordAgentTurnSync(
+  rawEvent: Record<string, unknown>,
+  rawCtx: Record<string, unknown> | undefined,
+  config: ResolvedConfig,
+): SessionAccumulator | null {
+  if (!config.enableAutoCapture) {
+    return null;
+  }
+
+  const session = deriveSessionRef(rawEvent, rawCtx);
+  const existing = loadSessionAccumulatorSync(config.sessionStatePath, session.session_key);
+  const texts = extractEventTexts(rawEvent);
+  if (texts.length === 0) {
+    return existing ?? null;
+  }
+
+  const now = new Date().toISOString();
+  const accumulator: SessionAccumulator = existing ?? {
+    session_id: session.session_id,
+    session_key: session.session_key,
+    channel_id: session.channel_id,
+    source_surface: session.source_surface,
+    started_at: now,
+    updated_at: now,
+    goal: inferGoalFromTexts(texts),
+    texts: [],
+    commands: [],
+    files: [],
+    tools: [],
+    source_pointer: session.source_pointer,
+  };
+
+  accumulator.updated_at = now;
+  accumulator.goal = accumulator.goal || inferGoalFromTexts(texts);
+  appendSignals(accumulator, texts);
+
+  saveSessionAccumulatorSync(config.sessionStatePath, accumulator);
   return accumulator;
 }
 
