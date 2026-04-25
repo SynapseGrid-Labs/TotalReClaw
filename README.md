@@ -2,9 +2,9 @@
 
 [![CI](https://github.com/trentdoney/TotalReClaw/actions/workflows/ci.yml/badge.svg)](https://github.com/trentdoney/TotalReClaw/actions/workflows/ci.yml)
 [![License](https://img.shields.io/github/license/trentdoney/TotalReClaw)](LICENSE)
-[![Node](https://img.shields.io/badge/node-%3E%3D22-339933?logo=nodedotjs&logoColor=white)](package.json)
+[![Node](https://img.shields.io/badge/node-%3E%3D22.14.0-339933?logo=nodedotjs&logoColor=white)](package.json)
 
-![TotalReClaw header](docs/images/totalreclaw-header.svg)
+![TotalReClaw header](docs/images/totalreclaw-header-vip.svg)
 
 TotalReClaw is an OpenClaw plugin plus skill that gives an agent durable operational memory. It recalls prior fixes, decisions, procedures, blockers, environment state, and accepted session summaries before work repeats itself.
 
@@ -14,9 +14,9 @@ It is built for operator workflows where "what did we already learn?" matters as
 
 Status: public alpha. The install path, storage model, commands, historical-session import, and automatic hooks are in place. Expect breaking changes before `1.0.0` while the project broadens host validation and release coverage.
 
-## Origin
+## Purpose
 
-TotalReClaw was first built as a four-person hackathon collaboration in Phoenix, Arizona, then hardened into the public release in this repository.
+TotalReClaw is built for practical operations work: install history, debugging context, host state, reusable procedures, and decisions that should be visible before an agent repeats a risky step.
 
 ## What it does
 
@@ -39,32 +39,31 @@ TotalReClaw was first built as a four-person hackathon collaboration in Phoenix,
 Prerequisites:
 
 - OpenClaw with TypeScript-aware extension loading
-- Node `22+`
+- OpenClaw `2026.4.24+`
+- Node `22.14.0+`
 - SSH access to the target host if you want to install remotely
 
 Local verification:
 
 ```bash
-npm install
+npm ci
 npm run verify
 ```
 
 Remote install:
+
+These scripts are opinionated admin helpers with real operational blast radius. Use them only for paths and hosts that TotalReClaw is meant to own.
+
+- `rsync --delete` is used against the managed extension and skill directories
+- `~/.openclaw/openclaw.json` is rewritten after a timestamped backup is created
+- the remote OpenClaw gateway is restarted as part of install
 
 ```bash
 REMOTE_HOST=my-openclaw-host ./scripts/install-remote.sh
 REMOTE_HOST=my-openclaw-host ./scripts/verify-remote.sh
 ```
 
-These scripts are opinionated admin helpers. They update the remote OpenClaw config, ensure the skill and plugin paths exist, and restart the remote gateway.
-
-They also have real operational blast radius:
-
-- `rsync --delete` is used against the managed extension and skill directories
-- `~/.openclaw/openclaw.json` is rewritten after a timestamped backup is created
-- the remote OpenClaw gateway is restarted as part of install
-
-Use them only for paths and hosts that TotalReClaw is meant to own.
+The installer updates the remote OpenClaw config, ensures the skill and plugin paths exist, and restarts the remote gateway.
 
 Expected result after remote verify:
 
@@ -87,7 +86,7 @@ Expected result after remote verify:
 /totalreclaw capture --stdin "<summary>"
 /totalreclaw capture --accept <draft-id>
 /totalreclaw explain "<query>"
-/totalreclaw resolve "<query>" [--action keep-newer|keep-older|merge|defer]
+/totalreclaw resolve "<query>" [--action keep-newer|keep-older|merge|defer] [--left <record-id> --right <record-id>]
 /totalreclaw demo
 ```
 
@@ -118,9 +117,9 @@ Use `session close` when a working session produced useful context and you want 
 
 ## Visual overview
 
-![TotalReClaw architecture](docs/images/totalreclaw-architecture.svg)
+![TotalReClaw architecture](docs/images/totalreclaw-architecture-vip.svg)
 
-![TotalReClaw workflow](docs/images/totalreclaw-workflow.svg)
+![TotalReClaw workflow](docs/images/totalreclaw-workflow-vip.svg)
 
 ## Example workflows
 
@@ -173,10 +172,11 @@ Inspect accepted session memory later:
 
 ## How it works
 
-TotalReClaw has two automatic plugin hooks:
+TotalReClaw uses three automatic plugin hooks:
 
 - `before_prompt_build`: reads current prompt text, checks whether it looks operational, and prepends a small reference-only recall block when there is a useful match
-- `agent_end`: accumulates session context so a later `session close` can turn it into a review draft
+- `before_message_write`: accumulates session context as messages are written so a later `session close` can turn it into a review draft
+- `before_reset`: finalizes the matching accumulated session into a review draft before a reset discards it
 
 Memory is never blindly auto-accepted. The automatic path only creates context or drafts. Durable records require an explicit accept step.
 
@@ -218,7 +218,7 @@ Default behavior:
 | `enabled` | `true` | Master switch |
 | `enableAutoRecall` | `true` | Enables pre-prompt recall injection |
 | `enableAutoCheck` | `true` | Alias of `enableAutoRecall` for older config |
-| `enableAutoCapture` | `true` | Enables session accumulation at `agent_end` |
+| `enableAutoCapture` | `true` | Enables session accumulation from OpenClaw message-write and reset hooks |
 | `dbPath` | `~/.openclaw/totalreclaw/totalreclaw.db` | Accepted records and accepted session summaries |
 | `storePath` | `~/.openclaw/totalreclaw/lessons.jsonl` | Legacy one-time import path |
 | `draftPath` | `~/.openclaw/totalreclaw/review` | Reviewable capture and session drafts |
@@ -254,12 +254,12 @@ Important behavior:
 
 TotalReClaw currently assumes:
 
-- Node `22+` because it uses `node:sqlite`
-- current manual validation target is OpenClaw `2026.4.15+`
+- Node `22.14.0+` because it uses `node:sqlite`
+- OpenClaw `2026.4.24+`
 - OpenClaw can load TypeScript extensions directly from `index.ts`
 - OpenClaw honors plugin-declared bundled skills from `openclaw.plugin.json`
 
-On current Node 22 releases, `node:sqlite` may emit an `ExperimentalWarning` during tests and demo execution. That warning is expected today and does not indicate a failing build.
+On Node builds where `node:sqlite` is still marked experimental, tests and demo execution may emit an `ExperimentalWarning`. That warning does not indicate a failing build.
 
 This repo is aimed at operational use, not consumer chat memory. It is designed for host operations, install history, debugging context, and reusable procedures.
 
@@ -268,7 +268,7 @@ This repo is aimed at operational use, not consumer chat memory. It is designed 
 Install dependencies:
 
 ```bash
-npm install
+npm ci
 ```
 
 Run the full local verification pass:

@@ -1,6 +1,6 @@
 {
   "name": "totalreclaw",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "OpenClaw operational memory that recalls prior records and session context before agents repeat work.",
   "type": "module",
   "main": "index.ts",
@@ -28,6 +28,12 @@
     "src/**/*.ts",
     "skills/**",
     "examples/**",
+    "docs/ARCHITECTURE.md",
+    "docs/images/totalreclaw-header-vip.svg",
+    "docs/images/totalreclaw-architecture-vip.svg",
+    "docs/images/totalreclaw-workflow-vip.svg",
+    "scripts/install-remote.sh",
+    "scripts/verify-remote.sh",
     "README.md",
     "LICENSE",
     "SECURITY.md",
@@ -40,15 +46,15 @@
     "verify": "npm run typecheck && npm run test && npm run pack:check"
   },
   "peerDependencies": {
-    "openclaw": ">=2026.4.15"
+    "openclaw": ">=2026.4.24"
   },
   "devDependencies": {
     "@types/node": "^22.0.0",
-    "typescript": "^5.9.3",
-    "vitest": "^3.2.4"
+    "typescript": "^6.0.3",
+    "vitest": "^4.1.5"
   },
   "engines": {
-    "node": ">=22"
+    "node": ">=22.14.0"
   },
   "openclaw": {
     "extensions": [

@@ -85,11 +85,17 @@ describe("auto recall hook", () => {
     expect(config.dbPath.startsWith("~")).toBe(false);
   });
 
-  it("finalizes the matching session for command reset hooks", async () => {
+  it("finalizes the matching session for reset hooks", async () => {
     const root = await mkdtemp(path.join(os.tmpdir(), "totalreclaw-hook-register-"));
     roots.push(root);
 
-    const handlers = new Map<string, (event: Record<string, unknown>, ctx: Record<string, unknown>) => Promise<unknown>>();
+    const handlers = new Map<
+      string,
+      {
+        handler: (event: Record<string, unknown>, ctx: Record<string, unknown>) => unknown;
+        opts?: { priority?: number };
+      }
+    >();
     plugin.register({
       pluginConfig: {
         dbPath: path.join(root, "totalreclaw.db"),
@@ -112,45 +118,51 @@ describe("auto recall hook", () => {
         return input === "." ? root : path.resolve(root, input);
       },
       registerTool() {},
-      on(hookName, handler) {
-        handlers.set(hookName, handler);
+      on(hookName, handler, opts) {
+        handlers.set(hookName, { handler, opts });
       },
     });
 
     expect(handlers.has("before_prompt_build")).toBe(true);
-    expect(handlers.has("agent_end")).toBe(true);
-    expect(handlers.has("command:new")).toBe(true);
-    expect(handlers.has("command:reset")).toBe(true);
+    expect(handlers.has("before_message_write")).toBe(true);
+    expect(handlers.has("before_reset")).toBe(true);
 
-    const agentEnd = handlers.get("agent_end");
-    const commandReset = handlers.get("command:reset");
-    expect(agentEnd).toBeTruthy();
-    expect(commandReset).toBeTruthy();
+    const beforeMessageWrite = handlers.get("before_message_write");
+    const beforeReset = handlers.get("before_reset");
+    expect(beforeMessageWrite).toBeTruthy();
+    expect(beforeReset).toBeTruthy();
+    expect(beforeMessageWrite?.opts?.priority).toBeLessThan(0);
 
-    await agentEnd!(
+    const firstWriteResult = beforeMessageWrite!.handler(
       {
-        agent: { id: "openclaw-agent" },
-        session: { id: "sess-a" },
-        prompt: "Investigate plugin install issue on host A.",
-        messages: [{ role: "assistant", content: "Decision: restart the gateway after the plugin sync." }],
+        agentId: "openclaw-agent",
+        sessionKey: "sess-a",
+        message: {
+          role: "assistant",
+          content: "Decision: restart the gateway after the plugin sync.",
+        },
+      },
+      {},
+    );
+    expect(firstWriteResult).toBeUndefined();
+
+    beforeMessageWrite!.handler(
+      {
+        agentId: "openclaw-agent",
+        sessionKey: "sess-b",
+        message: {
+          role: "assistant",
+          content: "Outcome: session B is still in progress.",
+        },
       },
       {},
     );
 
-    await agentEnd!(
+    await beforeReset!.handler(
       {
-        agent: { id: "openclaw-agent" },
-        session: { id: "sess-b" },
-        prompt: "Check session B state.",
-        messages: [{ role: "assistant", content: "Outcome: session B is still in progress." }],
-      },
-      {},
-    );
-
-    await commandReset!(
-      {
-        agent: { id: "openclaw-agent" },
-        session: { id: "sess-a" },
+        agentId: "openclaw-agent",
+        sessionKey: "sess-a",
+        reason: "reset",
       },
       {},
     );

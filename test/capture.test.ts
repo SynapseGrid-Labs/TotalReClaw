@@ -172,7 +172,7 @@ describe("capture flow", () => {
     expect(timeline.text).toContain("# TotalReClaw timeline");
   });
 
-  it("writes session state only during agent_end accumulation", async () => {
+  it("writes session state only during explicit accumulation", async () => {
     const root = await mkdtemp(path.join(os.tmpdir(), "totalreclaw-accumulator-"));
     roots.push(root);
     const config = makeConfig(root);
