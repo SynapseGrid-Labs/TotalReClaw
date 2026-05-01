@@ -6,12 +6,12 @@
   "main": "index.ts",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/trentdoney/TotalReClaw.git"
+    "url": "git+https://github.com/SynapseGrid-Labs/TotalReClaw.git"
   },
   "bugs": {
-    "url": "https://github.com/trentdoney/TotalReClaw/issues"
+    "url": "https://github.com/SynapseGrid-Labs/TotalReClaw/issues"
   },
-  "homepage": "https://github.com/trentdoney/TotalReClaw#readme",
+  "homepage": "https://github.com/SynapseGrid-Labs/TotalReClaw#readme",
   "license": "MIT",
   "author": "Trent Doney",
   "keywords": [
